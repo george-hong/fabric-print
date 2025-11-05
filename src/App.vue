@@ -33,6 +33,10 @@ const loadComponent = async (componentName) => {
     console.warn(`组件 ${componentName} 不存在`);
     currentComponent.value = null;
   }
+
+  if (!currentComponent.value) {
+    currentComponent.value = `./demo/${componentName}`;
+  }
 };
 
 // 监听路由变化
