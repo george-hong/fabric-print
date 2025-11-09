@@ -147,7 +147,7 @@ const generateBarcode = async () => {
   }
 
   const barcodeWidth = 195;
-  const barcodeHeight = 50;
+  const barcodeHeight = 30;
   barcodeError.value = "";
   isGeneratingBarcode.value = true;
 
@@ -160,10 +160,11 @@ const generateBarcode = async () => {
       // scale: Math.max(3, Math.ceil(window.devicePixelRatio || 1) * 3),
       height: barcodeHeight, // 条码高度，单位：毫米
       width: barcodeWidth, // 条码宽度，单位：毫米
-      includetext: true,
+      // includetext: true,
+      // scale: 0.4,
       textyoffset: 4,        // 文字额外向下偏移2点（可选）
-      textsize: 24,           // 文字大小（单位：点，默认8）
-      textxalign: "center",
+      textsize: PixelConverter.mmToPx(15),           // 文字大小（单位：点，默认8）
+      // textxalign: "center",
       textfont: '黑体',
     });
   } catch (err) {

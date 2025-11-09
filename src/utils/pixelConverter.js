@@ -138,4 +138,12 @@ export default class PixelConverter {
   static pxToPtBatch(pxArray) {
     return pxArray.map((px) => this.pxToPt(px));
   }
+
+
+  static mmToPt(mm) {
+    // 毫米转磅（pt）
+    // 1英寸 = 25.4毫米，1英寸 = 72pt，所以 1毫米 = 72/25.4 pt
+    this.validateNumber(mm, "毫米值");
+    return (mm * 72) / 25.4;
+  }
 }
