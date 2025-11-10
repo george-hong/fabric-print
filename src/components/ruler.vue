@@ -12,10 +12,13 @@
         @mousedown="containerMousedownEvent"
         @mouseup="containerMouseupEvent"
         @mousemove="containerMousemoveEvent"
+        ref="containerElRef"
         >
-            <div class="ruler-content">
-                <slot></slot>
+          <div class="ruler-content-position-box" ref="positionElRef">
+            <div class="ruler-content" ref="contentElRef">
+              <slot></slot>
             </div>
+          </div>
         </div>
     </div>
 </template>
@@ -31,16 +34,22 @@ import PixelConverter from '@/utils/pixelConverter';
 
 const horizontalRuleEl = ref();
 const verticalRuleEl = ref();
+const containerElRef = ref();
+const positionElRef = ref();
+const contentElRef = ref();
+const unit = 'mm'
 let horizontalRuler
 let verticalRuler
 const dragInfo = ref({
     dragging: false,
-    startX: 0,
-    startY: 0,
-    lastX: 0,
-    lastY: 0,
-    x: 0,
-    y: 0,
+    startX: 0, // 鼠标点击时记录的pageX值，单位px
+    startY: 0, // 鼠标点击时记录的pageY值，单位px
+    lastX: 0, // 鼠标最后拖拽时记录的pageX值，单位mm
+    lastY: 0, // 鼠标最后拖拽时记录的pageX值，单位mm
+    offsetX: 0, // 打印内容到容器的初始间距X，单位mm
+    offsetY: 0, // 打印内容到容器的初始间距Y，单位mm
+    x: 0, // 单位mm
+    y: 0, // 单位mm
     
 })
 const props = defineProps({
@@ -59,7 +68,6 @@ const props = defineProps({
 })
 
 const computedStyles = computed(() => {
-    const unit = 'mm'
     const horiSize = props.horiSize
     const vertSize = props.vertSize
     return {
@@ -96,7 +104,6 @@ const containerMouseUpEvent = (event) => {
     dragInfo.value.dragging = false
     dragInfo.value.x = dragInfo.value.lastX
     dragInfo.value.y = dragInfo.value.lastY
-    console.log('up ', event)
 }
 
 const containerMousemoveEvent = (event) => {
@@ -113,7 +120,32 @@ const containerMousemoveEvent = (event) => {
 }
 
 const setContentToCenter = () => {
-    
+    // 1. 获取内容宽高并转换成显示单位
+    const { width, height } = contentElRef.value.getBoundingClientRect()
+    const contentWidthMM = PixelConverter.pxToMm(width)
+    const contentHeightMM = PixelConverter.pxToMm(height)
+    // 2.
+    const { width: pWidth, height: pHeight } = positionElRef.value.getBoundingClientRect()
+    const positionWidthMM = PixelConverter.pxToMm(pWidth)
+    const positionHeightMM = PixelConverter.pxToMm(pHeight)
+
+    // 3.
+    const { width: cWidth, height: cHeight } = containerElRef.value.getBoundingClientRect()
+    const containerWidthMM = PixelConverter.pxToMm(cWidth)
+    const containerHeightMM = PixelConverter.pxToMm(cHeight)
+    const offsetX = (containerWidthMM - contentWidthMM) / 2
+    const offsetY = (containerHeightMM - contentHeightMM) / 2
+    // 记录初始偏移量
+    dragInfo.value.x = -offsetX
+    dragInfo.value.y = -offsetY
+
+    horizontalRuler.scroll(-offsetX / 10)
+    verticalRuler.scroll(-offsetY / 10)
+
+  // 蜷缩宽高等于 容器的一半
+  containerElRef.value.scrollTop = cHeight / 2
+  containerElRef.value.scrollLeft = cWidth / 2
+  console.log('elInfo', )
 }
 
 onMounted(() => {
@@ -136,6 +168,8 @@ onMounted(() => {
     });
 
     window.addEventListener("mouseup", containerMouseUpEvent)
+
+  setContentToCenter()
 });
 
 onBeforeUnmount(() => {
@@ -168,5 +202,19 @@ onBeforeUnmount(() => {
 
 .ruler-container {
     position: absolute;
+    overflow: auto;
+}
+
+.ruler-content-position-box {
+  position: relative;
+  width: 200%;
+  height: 200%;
+}
+
+.ruler-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 </style>
