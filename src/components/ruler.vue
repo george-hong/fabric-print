@@ -12,6 +12,7 @@
         @mousedown="containerMousedownEvent"
         @mouseup="containerMouseupEvent"
         @mousemove="containerMousemoveEvent"
+        @scroll="() => containerScrollEvent()"
         ref="containerElRef"
         >
           <div class="ruler-content-position-box" ref="positionElRef">
@@ -119,33 +120,36 @@ const containerMousemoveEvent = (event) => {
     }
 }
 
-const setContentToCenter = () => {
+const containerScrollEvent = (scrollInfo) => {
+    console.log('containerScrollEvent', scrollInfo)
     // 1. 获取内容宽高并转换成显示单位
     const { width, height } = contentElRef.value.getBoundingClientRect()
     const contentWidthMM = PixelConverter.pxToMm(width)
     const contentHeightMM = PixelConverter.pxToMm(height)
-    // 2.
-    const { width: pWidth, height: pHeight } = positionElRef.value.getBoundingClientRect()
-    const positionWidthMM = PixelConverter.pxToMm(pWidth)
-    const positionHeightMM = PixelConverter.pxToMm(pHeight)
-
-    // 3.
+    // 2. 获取容器滚动距离并转换成显示单位
+    const { scrollLeft, scrollTop } = containerElRef.value
     const { width: cWidth, height: cHeight } = containerElRef.value.getBoundingClientRect()
-    const containerWidthMM = PixelConverter.pxToMm(cWidth)
-    const containerHeightMM = PixelConverter.pxToMm(cHeight)
-    const offsetX = (containerWidthMM - contentWidthMM) / 2
-    const offsetY = (containerHeightMM - contentHeightMM) / 2
-    // 记录初始偏移量
-    dragInfo.value.x = -offsetX
-    dragInfo.value.y = -offsetY
+    // 由于滚动方向和标尺方向相反，所以需要转换
+    const scrollLeftMM = PixelConverter.pxToMm(cWidth - scrollLeft)
+    const scrollTopMM = PixelConverter.pxToMm(cHeight - scrollTop)
+    // 3. 计算标尺起点偏移量
+    const offsetX = scrollLeftMM - contentWidthMM / 2
+    const offsetY = scrollTopMM - contentHeightMM / 2
+    
+    horizontalRuler.scroll((scrollInfo ? offsetX : -offsetX) / 10)
+    verticalRuler.scroll((scrollInfo ? offsetY : -offsetY) / 10)
+}
 
-    horizontalRuler.scroll(-offsetX / 10)
-    verticalRuler.scroll(-offsetY / 10)
+const setContentToCenter = () => {
 
-  // 蜷缩宽高等于 容器的一半
-  containerElRef.value.scrollTop = cHeight / 2
-  containerElRef.value.scrollLeft = cWidth / 2
-  console.log('elInfo', )
+    const { width, height } = containerElRef.value.getBoundingClientRect()
+    containerElRef.value.scrollLeft = width / 2
+    containerElRef.value.scrollTop = height / 2
+    // 触发 scroll 事件
+    containerScrollEvent({
+        scrollLeft: width / 2,
+        scrollTop: height / 2,
+    })
 }
 
 onMounted(() => {
