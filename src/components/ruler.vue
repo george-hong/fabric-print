@@ -97,8 +97,8 @@ const computedStyles = computed(() => {
 
 const containerMousedownEvent = (event) => {
     dragInfo.value.dragging = true
-    dragInfo.value.startX = event.clientX
-    dragInfo.value.startY = event.clientY
+    dragInfo.value.startX = event.pageX
+    dragInfo.value.startY = event.pageY
 }
 
 const containerMouseUpEvent = (event) => {
@@ -111,12 +111,18 @@ const containerMousemoveEvent = (event) => {
     if (dragInfo.value.dragging) {
         const diffX = event.pageX - dragInfo.value.startX
         const diffY = event.pageY - dragInfo.value.startY
-        const x = dragInfo.value.x - PixelConverter.pxToMm(diffX)
-        const y = dragInfo.value.y - PixelConverter.pxToMm(diffY)
-        dragInfo.value.lastX = x // 单位mm
-        dragInfo.value.lastY = y // 单位mm
-        if (horizontalRuler) horizontalRuler.scroll(x / 10) // 单位cm
-        if (verticalRuler) verticalRuler.scroll(y / 10) // 单位cm
+
+        const { scrollLeft, scrollTop } = containerElRef.value
+        const newScrollLeft = Math.max(0, scrollLeft - diffX)
+        const newScrollTop = Math.max(0, scrollTop - diffY)
+
+      containerElRef.value.scrollLeft = newScrollLeft
+      containerElRef.value.scrollTop = newScrollTop
+
+      containerScrollEvent({
+        scrollTop: newScrollTop,
+        scrollLeft: newScrollLeft
+      })
     }
 }
 
